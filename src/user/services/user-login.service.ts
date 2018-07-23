@@ -4,6 +4,7 @@ import { InjectModel } from "@nestjs/mongoose";
 import { AuthService } from "auth/services/auth.service";
 import { User } from "../interfaces/user.interface";
 import * as bcrypt from 'bcrypt';
+import { UserLoginDto } from '../dtos/user-login.dto';
 
 @Injectable()
 export class UserLoginService {
@@ -13,7 +14,7 @@ export class UserLoginService {
     private readonly authService: AuthService
   ){}
 
-  async login(user: User): Promise<String> {
+  async login(user: UserLoginDto): Promise<String> {
     const userToLogin = await this.userModel.findOne({email: user.email});
     
     if (!userToLogin) {

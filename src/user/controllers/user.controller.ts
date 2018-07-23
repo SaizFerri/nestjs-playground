@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Headers, UseGuards, Put, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, UseGuards, Put, Param, Delete } from '@nestjs/common';
 import { UserService } from '../services/user.service';
 import { User } from '../interfaces/user.interface';
 import { AuthGuard } from '@nestjs/passport';
@@ -9,6 +9,8 @@ import { ChangeRolesDto } from '../dtos/change-roles.dto';
 import { RolesEnum } from '../enums/roles.enum';
 import { UserResetPasswordService } from '../services/user-reset-password.service';
 import { ResetPasswordDto } from '../dtos/reset-password.dto';
+import { CreateUserDto } from '../dtos/create-user.dto';
+import { UserLoginDto } from '../dtos/user-login.dto';
 
 @Controller('users')
 export class UserController {
@@ -26,18 +28,18 @@ export class UserController {
   }
 
   @Post('/login')
-  async login(@Body() user): Promise<String> {
+  async login(@Body() user: UserLoginDto): Promise<String> {
     return await this.userLoginService.login(user);
   }
 
   @Post('/register')
-  async createUser(@Body() user) {
+  async createUser(@Body() user: CreateUserDto) {
     return await this.userService.createUser(user);
   }
   
   @Post('/resetPassword')
-  async createResetPasswordToken(@Body() params): Promise<String> {
-    return await this.userResetPasswordService.createResetPasswordToken(params.email);
+  async createResetPasswordToken(@Body() email): Promise<String> {
+    return await this.userResetPasswordService.createResetPasswordToken(email);
   }
 
   @Put('/resetPassword/:token')

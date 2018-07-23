@@ -7,6 +7,8 @@ export interface User {
   password: string,
   verified?: Boolean,
   roles?: RolesEnum[],
+  createdOn?: Date,
+  updatedOn?: Date,
   resetPasswordToken?: string,
   resetPasswordTokenExpiresAt?: Date 
 }

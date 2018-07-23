@@ -3,11 +3,13 @@ import { User } from '../interfaces/user.interface';
 import { RolesEnum } from '../enums/roles.enum';
 import { ChangeRolesDto } from '../dtos/change-roles.dto';
 import { Injectable, HttpException, HttpStatus, NotFoundException, BadRequestException, UnauthorizedException } from '@nestjs/common';
+import { includes } from 'lodash';
+import { ConfirmationHashService } from 'auth/services/confirmation-hash.service';
+import { CreateUserDto } from '../dtos/create-user.dto';
 import { InjectModel } from '@nestjs/mongoose';
 import * as bcrypt from 'bcrypt';
 import * as EmailValidator from 'email-validator';
-import { includes } from 'lodash';
-import { ConfirmationHashService } from 'auth/services/confirmation-hash.service';
+import * as moment from 'moment';
 
 @Injectable()
 export class UserService {
@@ -103,19 +105,21 @@ export class UserService {
    * Create a user and a confirmation hash to verify the account
    * @param user 
    */
-  async createUser(user: User) {
-    const { name, email, password } = user;
+  async createUser(user: CreateUserDto) {
+    const { name, email, password, repeatPassword } = user;
     const saltRounds = 10;
 
-    if (!EmailValidator.validate(email)) {
+    if (!EmailValidator.validate(email) || password !== repeatPassword) {
       throw new HttpException('User not created', HttpStatus.BAD_REQUEST);
     }
 
     const hash = await bcrypt.hash(password, saltRounds);
+    const createdOn = moment.utc(Date.now());
     const userModel = new this.userModel({
       name,
       email,
       password: hash,
+      createdOn
     });
 
     try {
@@ -134,6 +138,7 @@ export class UserService {
 
   async verifyAccount(hash: string): Promise<User> {
     const confirmationHash = await this.confirmationHashService.findOneByHash(hash);
+    const updatedOn = moment.utc(Date.now());
 
     if (confirmationHash === null) {
       throw new NotFoundException();
@@ -141,7 +146,7 @@ export class UserService {
     const userId = confirmationHash.userId;
     
     try {
-      await this.userModel.updateOne({ _id: userId}, { verified: true, roles: [RolesEnum.User] });
+      await this.userModel.updateOne({ _id: userId}, { verified: true, roles: [RolesEnum.User], updatedOn });
     } catch (error) {
       throw new UnauthorizedException();
     }
