@@ -11,6 +11,7 @@ import { UserResetPasswordService } from '../services/user-reset-password.servic
 import { ResetPasswordDto } from '../dtos/reset-password.dto';
 import { CreateUserDto } from '../dtos/create-user.dto';
 import { UserLoginDto } from '../dtos/user-login.dto';
+import { TokenDto } from '../dtos/token-dto';
 
 @Controller('users')
 export class UserController {
@@ -28,7 +29,7 @@ export class UserController {
   }
 
   @Post('/login')
-  async login(@Body() user: UserLoginDto): Promise<String> {
+  async login(@Body() user: UserLoginDto): Promise<TokenDto> {
     return await this.userLoginService.login(user);
   }
 
