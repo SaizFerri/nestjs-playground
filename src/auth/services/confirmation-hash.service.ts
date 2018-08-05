@@ -8,6 +8,10 @@ import * as crypto from 'crypto';
 export class ConfirmationHashService {
   constructor(@InjectModel('ConfirmationHash') private readonly confirmationHashModel: Model<ConfirmationHash>){}
 
+  async findHashById(id: string): Promise<ConfirmationHash> {
+    return await this.confirmationHashModel.findOne({ userId: id });
+  }
+
   async findOneByHash(hash: string): Promise<ConfirmationHash> {
     return await this.confirmationHashModel.findOne({ hash });
   }

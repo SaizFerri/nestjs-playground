@@ -12,6 +12,7 @@ import { ResetPasswordDto } from '../dtos/reset-password.dto';
 import { CreateUserDto } from '../dtos/create-user.dto';
 import { UserLoginDto } from '../dtos/user-login.dto';
 import { TokenDto } from '../dtos/token-dto';
+import { VerifyHashDto } from '../dtos/verify-hash.dto';
 
 @Controller('users')
 export class UserController {
@@ -63,7 +64,7 @@ export class UserController {
   }
 
   @Put('/verify/:hash')
-  async verifyAccount(@Param('hash') hash): Promise<User> {
+  async verifyAccount(@Param('hash') hash, @Body() params: VerifyHashDto): Promise<User> {
     return await this.userService.verifyAccount(hash);
   }
 }

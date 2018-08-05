@@ -7,16 +7,31 @@ import { includes } from 'lodash';
 import { ConfirmationHashService } from 'auth/services/confirmation-hash.service';
 import { CreateUserDto } from '../dtos/create-user.dto';
 import { InjectModel } from '@nestjs/mongoose';
+import { ConfigService } from 'config/services/config.service';
+import * as nodemailer from 'nodemailer';
 import * as bcrypt from 'bcrypt';
 import * as EmailValidator from 'email-validator';
 import * as moment from 'moment';
 
 @Injectable()
 export class UserService {
+  mailTransport: any;
+
   constructor(
     @InjectModel('User') private readonly userModel: Model<User>,
-    private readonly confirmationHashService: ConfirmationHashService
-  ){}
+    private readonly confirmationHashService: ConfirmationHashService,
+    private readonly config: ConfigService
+  ){
+    this.mailTransport = nodemailer.createTransport({
+      host: 'smtp.gmail.com',
+        port: 465,
+        secure: true,
+        auth: {
+          user: config.get('EMAIL_USER'),
+          pass: config.get('EMAIL_PASS')
+        }
+    });
+  }
 
   async findAll(): Promise<User[]> {
     return await this.userModel.find().exec();
@@ -125,6 +140,13 @@ export class UserService {
     try {
       const { _id, name, email } = await this.userModel.create(userModel);
       await this.confirmationHashService.createHash(_id, email);
+      const hash = await this.confirmationHashService.findHashById(_id);
+      this.mailTransport.sendMail({
+        from: this.config.get('EMAIL_USER'),
+        to: email,
+        subject: 'Verify your account',
+        text: `Verify your account under this link ${this.config.get('CLIENT_URL')}/verify/${hash.hash}`,
+      });
       return {
         _id,
         name,
