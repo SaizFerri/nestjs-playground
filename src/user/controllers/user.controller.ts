@@ -63,8 +63,8 @@ export class UserController {
     return await this.userService.removeRole(params);
   }
 
-  @Put('/verify/:hash')
-  async verifyAccount(@Param('hash') hash, @Body() params: VerifyHashDto): Promise<User> {
-    return await this.userService.verifyAccount(hash);
+  @Put('/verify')
+  async verifyAccount(@Body() params: VerifyHashDto): Promise<User> {
+    return await this.userService.verifyAccount(params);
   }
 }

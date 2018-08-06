@@ -12,6 +12,7 @@ import * as nodemailer from 'nodemailer';
 import * as bcrypt from 'bcrypt';
 import * as EmailValidator from 'email-validator';
 import * as moment from 'moment';
+import { VerifyHashDto } from '../dtos/verify-hash.dto';
 
 @Injectable()
 export class UserService {
@@ -125,7 +126,9 @@ export class UserService {
     const saltRounds = 10;
 
     if (!EmailValidator.validate(email) || password !== repeatPassword) {
-      throw new HttpException('User not created', HttpStatus.BAD_REQUEST);
+      throw new HttpException({
+        error: "User not created."
+      }, HttpStatus.BAD_REQUEST);
     }
 
     const hash = await bcrypt.hash(password, saltRounds);
@@ -154,12 +157,14 @@ export class UserService {
       };
       
     } catch(exception) {
-      throw new HttpException('User not created', HttpStatus.BAD_REQUEST);
+      throw new HttpException({
+        error: "User not created."
+      }, HttpStatus.BAD_REQUEST);
     }
   }
 
-  async verifyAccount(hash: string): Promise<User> {
-    const confirmationHash = await this.confirmationHashService.findOneByHash(hash);
+  async verifyAccount(hash: VerifyHashDto): Promise<any> {
+    const confirmationHash = await this.confirmationHashService.findOneByHash(hash.hash);
     const updatedOn = moment.utc(Date.now());
 
     if (confirmationHash === null) {
@@ -175,6 +180,8 @@ export class UserService {
     
     await this.confirmationHashService.deleteByHash(confirmationHash.hash);
 
-    return await this.findOneById(userId);
+    return {
+      response: "Account verified"
+    };
   }
 }
