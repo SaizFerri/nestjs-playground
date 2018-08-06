@@ -6,13 +6,13 @@ import { Injectable, HttpException, HttpStatus, NotFoundException, BadRequestExc
 import { includes } from 'lodash';
 import { ConfirmationHashService } from 'auth/services/confirmation-hash.service';
 import { CreateUserDto } from '../dtos/create-user.dto';
+import { VerifyHashDto } from '../dtos/verify-hash.dto';
 import { InjectModel } from '@nestjs/mongoose';
 import { ConfigService } from 'config/services/config.service';
 import * as nodemailer from 'nodemailer';
 import * as bcrypt from 'bcrypt';
 import * as EmailValidator from 'email-validator';
 import * as moment from 'moment';
-import { VerifyHashDto } from '../dtos/verify-hash.dto';
 
 @Injectable()
 export class UserService {
@@ -145,10 +145,18 @@ export class UserService {
       await this.confirmationHashService.createHash(_id, email);
       const hash = await this.confirmationHashService.findHashById(_id);
       this.mailTransport.sendMail({
-        from: this.config.get('EMAIL_USER'),
+        from: '"[Verify] Skylogbook" <skylogbookapp@gmail.com>',
         to: email,
         subject: 'Verify your account',
-        text: `Verify your account under this link ${this.config.get('CLIENT_URL')}/verify/${hash.hash}`,
+        text: '',
+        html: `
+          <h3>Hi ${name},</h3>
+          <p>
+            please verify your account clicking on this link:
+          </p> 
+          <a href="${this.config.get('CLIENT_URL')}/verify/${hash.hash}">${this.config.get('CLIENT_URL')}/verify/${hash.hash}</a> <br>
+          <p>Best regards, <br> The Skylogbook Team</p>
+        `
       });
       return {
         _id,
@@ -163,12 +171,19 @@ export class UserService {
     }
   }
 
+  /**
+   * Verify an account by deleting the hash on the confirmationHash table
+   * and updating the user.
+   * @param hash 
+   */
   async verifyAccount(hash: VerifyHashDto): Promise<any> {
     const confirmationHash = await this.confirmationHashService.findOneByHash(hash.hash);
     const updatedOn = moment.utc(Date.now());
 
     if (confirmationHash === null) {
-      throw new NotFoundException();
+      throw new NotFoundException({
+        error: "No user to verify"
+      });
     }
     const userId = confirmationHash.userId;
     

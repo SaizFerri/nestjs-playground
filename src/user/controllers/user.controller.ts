@@ -13,6 +13,7 @@ import { CreateUserDto } from '../dtos/create-user.dto';
 import { UserLoginDto } from '../dtos/user-login.dto';
 import { TokenDto } from '../dtos/token-dto';
 import { VerifyHashDto } from '../dtos/verify-hash.dto';
+import { RequestResetPasswordDto } from '../dtos/request-reset-password.dto';
 
 @Controller('users')
 export class UserController {
@@ -40,8 +41,8 @@ export class UserController {
   }
   
   @Post('/resetPassword')
-  async createResetPasswordToken(@Body() email): Promise<String> {
-    return await this.userResetPasswordService.createResetPasswordToken(email);
+  async createResetPasswordToken(@Body() params: RequestResetPasswordDto) {
+    return await this.userResetPasswordService.createResetPasswordToken(params);
   }
 
   @Put('/resetPassword/:token')

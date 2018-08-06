@@ -19,13 +19,17 @@ export class UserLoginService {
     const userToLogin = await this.userModel.findOne({email: user.email});
     
     if (!userToLogin) {
-      throw new UnauthorizedException('Email or password incorrect.');
+      throw new UnauthorizedException({
+        error: 'Email or password incorrect'
+      });
     }
 
     const canLogIn = await bcrypt.compare(user.password, userToLogin.password);
     
     if (!canLogIn) {
-      throw new UnauthorizedException('Email or password incorrect.');
+      throw new UnauthorizedException({
+        error: 'Email or password incorrect'
+      });
     }
 
     const token = await this.authService.createToken(userToLogin);

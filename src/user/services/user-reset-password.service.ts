@@ -4,21 +4,38 @@ import { InjectModel } from "@nestjs/mongoose";
 import { User } from "../interfaces/user.interface";
 import { UserService } from "./user.service";
 import { ResetPasswordDto } from "../dtos/reset-password.dto";
+import { TokenDto } from "../dtos/token-dto";
 import * as bcrypt from 'bcrypt';
 import * as moment from 'moment';
 import * as uuidv4 from 'uuid/v4';
+import * as nodemailer from 'nodemailer';
+import { ConfigService } from "config/services/config.service";
+import { RequestResetPasswordDto } from "../dtos/request-reset-password.dto";
 
 @Injectable()
 export class UserResetPasswordService {
+  mailTransport: any;
+
   constructor(
     @InjectModel('User') private readonly userModel: Model<User>,
-    private readonly userService: UserService
-  ){}
+    private readonly userService: UserService,
+    private readonly config: ConfigService
+  ){
+    this.mailTransport = nodemailer.createTransport({
+      host: 'smtp.gmail.com',
+        port: 465,
+        secure: true,
+        auth: {
+          user: config.get('EMAIL_USER'),
+          pass: config.get('EMAIL_PASS')
+        }
+    });
+  }
 
-  async createResetPasswordToken(email: string): Promise<string> {
+  async createResetPasswordToken(params: RequestResetPasswordDto) {
+    const email = params.email;
     const user = await this.userService.findOneByEmail(email);
-    const saltRounds = 2;
-
+    
     if (user === null || !user.verified) {
       throw new UnauthorizedException();
     }
@@ -28,11 +45,24 @@ export class UserResetPasswordService {
     
     try {
       await this.userModel.updateOne({ email: email }, { resetPasswordToken: token, resetPasswordTokenExpiresAt: date });
+      const { name } = await this.userService.findOneByEmail(email);
+      this.mailTransport.sendMail({
+        from: '"[Reset your Password] Skylogbook" <skylogbookapp@gmail.com>',
+        to: email,
+        subject: 'Reset your password',
+        text: '',
+        html: `
+          <h3>Hi ${name},</h3>
+          <p>
+            please click the link below to reset your password:
+          </p> 
+          <a href="${this.config.get('CLIENT_URL')}/resetPassword/${token}">${this.config.get('CLIENT_URL')}/resetPassword/${token}</a> <br>
+          <p>Best regards, <br> The Skylogbook Team</p>
+        `
+      });
     } catch (error) {
       throw new UnauthorizedException();
     }
-
-    return token;
   }
 
   async resetPassword(token: string, params: ResetPasswordDto) {
