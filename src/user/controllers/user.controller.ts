@@ -52,7 +52,7 @@ export class UserController {
 
   @Put('roles')
   @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Roles(RolesEnum.Admin)
+  @Roles(RolesEnum.User)
   async addRoles(@Body() params: ChangeRolesDto) {
     return await this.userService.addRoles(params);
   }

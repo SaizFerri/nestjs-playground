@@ -192,6 +192,13 @@ export class UserService {
     
     const confirmationHash = await this.confirmationHashService.findHashById(user.id);
 
+    if (!confirmationHash) {
+      throw new NotFoundException({
+        success: false,
+        error: "No user to verify"
+      });
+    }
+
     const from = '"[Verify your account] Skylogbook" <skylogbookapp@gmail.com>';
     const subject = 'Verify your account';
     const html = `
