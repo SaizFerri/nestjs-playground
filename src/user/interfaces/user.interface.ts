@@ -10,5 +10,4 @@ export interface User {
   createdOn?: Date,
   updatedOn?: Date,
   resetPasswordToken?: string,
-  resetPasswordTokenExpiresAt?: Date 
 }

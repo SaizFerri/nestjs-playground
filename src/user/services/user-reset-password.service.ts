@@ -1,16 +1,20 @@
-import { Injectable, UnauthorizedException, BadRequestException, HttpException, HttpStatus } from "@nestjs/common";
-import { Model } from 'mongoose';
+import { Injectable, UnauthorizedException } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
-import { User } from "../interfaces/user.interface";
+
+import { Model } from 'mongoose';
+
 import { UserService } from "./user.service";
-import { ResetPasswordDto } from "../dtos/reset-password.dto";
-import { TokenDto } from "../dtos/token-dto";
-import * as bcrypt from 'bcrypt';
-import * as moment from 'moment';
-import * as uuidv4 from 'uuid/v4';
-import * as nodemailer from 'nodemailer';
 import { ConfigService } from "config/services/config.service";
-import { RequestResetPasswordDto } from "../dtos/request-reset-password.dto";
+
+import { User } from "../interfaces/user.interface";
+
+import { EmailDto } from "../dtos/email.dto";
+import { ResetPasswordDto } from "../dtos/reset-password.dto";
+
+import * as jwt from 'jsonwebtoken';
+import * as bcrypt from 'bcrypt';
+import * as nodemailer from 'nodemailer';
+import * as moment from 'moment';
 
 @Injectable()
 export class UserResetPasswordService {
@@ -32,27 +36,42 @@ export class UserResetPasswordService {
     });
   }
 
-  async createResetPasswordToken(params: RequestResetPasswordDto) {
+  /**
+   * Function to create the resetPassword token
+   * @param params 
+   */
+  async createResetPasswordToken(params: EmailDto) {
     const email = params.email;
     const user = await this.userService.findOneByEmail(email);
     
     if (user === null || !user.verified) {
-      throw new UnauthorizedException();
+      throw new UnauthorizedException({
+        success: false,
+        error: "Account is not verified, please verify your account"
+      });
     }
 
-    const token = uuidv4();
-    const date = moment(Date.now()).add(1, 'hours').format();    
+    // Create the token
+    const token = jwt.sign(
+      { id: user.id, email: user.email },
+      this.config.get('SECRET_KEY'),
+      { expiresIn: 3600 }
+    );
+
+    const updatedOn = moment.utc(Date.now());
+ 
     
     try {
-      await this.userModel.updateOne({ email: email }, { resetPasswordToken: token, resetPasswordTokenExpiresAt: date });
-      const { name } = await this.userService.findOneByEmail(email);
+      // Update the user in the database with the token
+      await this.userModel.updateOne({ email: email }, { updatedOn, resetPasswordToken: token });
+      
       this.mailTransport.sendMail({
         from: '"[Reset your Password] Skylogbook" <skylogbookapp@gmail.com>',
         to: email,
         subject: 'Reset your password',
         text: '',
         html: `
-          <h3>Hi ${name},</h3>
+          <h3>Hi ${user.name},</h3>
           <p>
             please click the link below to reset your password:
           </p> 
@@ -60,30 +79,68 @@ export class UserResetPasswordService {
           <p>Best regards, <br> The Skylogbook Team</p>
         `
       });
+
     } catch (error) {
-      throw new UnauthorizedException();
+      throw new UnauthorizedException({
+          success: false,
+          error: "There was an error generating the token"
+        });
+    }
+
+    return {
+      success: true,
+      message: "Token generated and email sent"
     }
   }
 
-  async resetPassword(token: string, params: ResetPasswordDto) {
-    const user = await this.userModel.findOne({ resetPasswordToken: token, resetPasswordTokenExpiresAt: { $gt: Date.now() } });
+  /**
+   * Function to actually reset the password
+   * @param params 
+   */
+  async resetPassword(params: ResetPasswordDto) {
+    // Verify if the token has expired
+    jwt.verify(params.token, this.config.get('SECRET_KEY'), (err, decoded) => {
+      if (err) {
+        throw new UnauthorizedException({
+          success: false,
+          error: "Token has expired"
+        });
+      }
+    });
+
+    const user = await this.userModel.findOne({ resetPasswordToken: params.token });
     
     if (user === null) {
-      throw new HttpException('Token expired', HttpStatus.UNAUTHORIZED);
+      throw new UnauthorizedException({
+        success: false,
+        error: "User not found"
+      });
     }
 
-    const { password, verifyPassword } = params;
+    const { password, repeatPassword } = params;
     const saltRounds = 10;
+    const updatedOn = moment.utc(Date.now());
 
-    if (password === verifyPassword) {
+    if (password === repeatPassword) {
       const hash = await bcrypt.hash(password, saltRounds);
       try {
-        await this.userModel.updateOne({ _id: user.id }, { password: hash, resetPasswordToken: null, resetPasswordTokenExpiresAt: null });
+        await this.userModel.updateOne({ _id: user.id }, { password: hash, updatedOn, resetPasswordToken: null });
       } catch (error) {
-        throw new UnauthorizedException();
+        throw new UnauthorizedException({
+          success: false,
+          error: "Could not update the password"
+        });
       }
     } else {
-      throw new HttpException('Passwords doesn\'t match', HttpStatus.UNAUTHORIZED);
+      throw new UnauthorizedException({
+        success: false,
+        error: "Passwords do not match"
+      });
+    }
+
+    return {
+      success: true,
+      message: "Password successfully reseted"
     }
   }
 }

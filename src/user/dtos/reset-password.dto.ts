@@ -1,4 +1,5 @@
 export class ResetPasswordDto {
+  token: string;
   password: string;
-  verifyPassword: string;
+  repeatPassword: string;
 }

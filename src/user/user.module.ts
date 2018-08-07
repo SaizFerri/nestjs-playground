@@ -7,11 +7,13 @@ import { AuthModule } from 'auth/auth.module';
 import { UserLoginService } from './services/user-login.service';
 import { UserResetPasswordService } from './services/user-reset-password.service';
 import { ConfigModule } from 'config/config.module';
+import { EmailModule } from 'email/email.module';
 
 @Module({
   imports: [
     MongooseModule.forFeature([{ name: 'User', schema: UserSchema }]),  
     ConfigModule,
+    EmailModule,
     forwardRef(() => AuthModule)
   ],
   controllers: [UserController],

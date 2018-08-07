@@ -13,7 +13,7 @@ import { CreateUserDto } from '../dtos/create-user.dto';
 import { UserLoginDto } from '../dtos/user-login.dto';
 import { TokenDto } from '../dtos/token-dto';
 import { VerifyHashDto } from '../dtos/verify-hash.dto';
-import { RequestResetPasswordDto } from '../dtos/request-reset-password.dto';
+import { EmailDto } from '../dtos/email.dto';
 
 @Controller('users')
 export class UserController {
@@ -41,13 +41,13 @@ export class UserController {
   }
   
   @Post('/resetPassword')
-  async createResetPasswordToken(@Body() params: RequestResetPasswordDto) {
+  async createResetPasswordToken(@Body() params: EmailDto) {
     return await this.userResetPasswordService.createResetPasswordToken(params);
   }
 
-  @Put('/resetPassword/:token')
-  async resetPassword(@Param('token') token, @Body() params: ResetPasswordDto) {
-    return await this.userResetPasswordService.resetPassword(token, params);
+  @Put('/resetPassword')
+  async resetPassword(@Body() params: ResetPasswordDto) {
+    return await this.userResetPasswordService.resetPassword(params);
   }
 
   @Put('roles')
@@ -67,5 +67,10 @@ export class UserController {
   @Put('/verify')
   async verifyAccount(@Body() params: VerifyHashDto): Promise<User> {
     return await this.userService.verifyAccount(params);
+  }
+
+  @Post('/resendVerificationEmail')
+  async resendVerificationEmail(@Body() params: EmailDto) {
+    return this.userService.resendVerificationEmail(params);
   }
 }

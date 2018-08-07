@@ -1,38 +1,35 @@
-import { Model } from 'mongoose';
-import { User } from '../interfaces/user.interface';
-import { RolesEnum } from '../enums/roles.enum';
-import { ChangeRolesDto } from '../dtos/change-roles.dto';
-import { Injectable, HttpException, HttpStatus, NotFoundException, BadRequestException, UnauthorizedException } from '@nestjs/common';
-import { includes } from 'lodash';
+import { Injectable, NotFoundException, BadRequestException, UnauthorizedException } from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
+
 import { ConfirmationHashService } from 'auth/services/confirmation-hash.service';
+import { ConfigService } from 'config/services/config.service';
+import { EmailService } from 'email/services/email.service';
+
+import { ChangeRolesDto } from '../dtos/change-roles.dto';
 import { CreateUserDto } from '../dtos/create-user.dto';
 import { VerifyHashDto } from '../dtos/verify-hash.dto';
-import { InjectModel } from '@nestjs/mongoose';
-import { ConfigService } from 'config/services/config.service';
-import * as nodemailer from 'nodemailer';
+import { EmailDto } from '../dtos/email.dto';
+
+import { User } from '../interfaces/user.interface';
+
+import { RolesEnum } from '../enums/roles.enum';
+import { Response } from '../interfaces/response.interface';
+
+import { Model } from 'mongoose';
+import { includes } from 'lodash';
 import * as bcrypt from 'bcrypt';
 import * as EmailValidator from 'email-validator';
 import * as moment from 'moment';
 
 @Injectable()
 export class UserService {
-  mailTransport: any;
 
   constructor(
     @InjectModel('User') private readonly userModel: Model<User>,
     private readonly confirmationHashService: ConfirmationHashService,
+    private readonly emailService: EmailService,
     private readonly config: ConfigService
-  ){
-    this.mailTransport = nodemailer.createTransport({
-      host: 'smtp.gmail.com',
-        port: 465,
-        secure: true,
-        auth: {
-          user: config.get('EMAIL_USER'),
-          pass: config.get('EMAIL_PASS')
-        }
-    });
-  }
+  ){ }
 
   async findAll(): Promise<User[]> {
     return await this.userModel.find().exec();
@@ -126,9 +123,10 @@ export class UserService {
     const saltRounds = 10;
 
     if (!EmailValidator.validate(email) || password !== repeatPassword) {
-      throw new HttpException({
-        error: "User not created."
-      }, HttpStatus.BAD_REQUEST);
+      throw new BadRequestException({
+        success: false,
+        error: "Account not created"
+      });
     }
 
     const hash = await bcrypt.hash(password, saltRounds);
@@ -141,33 +139,75 @@ export class UserService {
     });
 
     try {
+      // Create user and get those fields
       const { _id, name, email } = await this.userModel.create(userModel);
-      await this.confirmationHashService.createHash(_id, email);
-      const hash = await this.confirmationHashService.findHashById(_id);
-      this.mailTransport.sendMail({
-        from: '"[Verify] Skylogbook" <skylogbookapp@gmail.com>',
-        to: email,
-        subject: 'Verify your account',
-        text: '',
-        html: `
-          <h3>Hi ${name},</h3>
-          <p>
-            please verify your account clicking on this link:
-          </p> 
-          <a href="${this.config.get('CLIENT_URL')}/verify/${hash.hash}">${this.config.get('CLIENT_URL')}/verify/${hash.hash}</a> <br>
-          <p>Best regards, <br> The Skylogbook Team</p>
-        `
-      });
+      // Create confirmationHash and get the hash
+      const { hash } = await this.confirmationHashService.createHash(_id, email);
+
+      // Email properties
+      const from = '"[Verify your account] Skylogbook" <skylogbookapp@gmail.com>';
+      const subject = 'Verify your account';
+      const html = `
+        <h3>Hi ${name},</h3>
+        <p>
+          please verify your account clicking on this link:
+        </p> 
+        <a href="${this.config.get('CLIENT_URL')}/verify/${hash}">${this.config.get('CLIENT_URL')}/verify/${hash}</a> <br>
+        <p>Best regards, <br> The Skylogbook Team</p>
+      `;
+
+      this.emailService.sendMail(from, email, subject, html);
+
       return {
-        _id,
-        name,
-        email
+        success: true,
+        message: "User created",
+        user: {
+          _id,
+          name,
+          email
+        }
       };
       
     } catch(exception) {
-      throw new HttpException({
-        error: "User not created."
-      }, HttpStatus.BAD_REQUEST);
+      throw new BadRequestException({
+        success: false,
+        error: "User not created"
+      })
+    }
+  }
+  
+  /**
+   * Function to resend a verification e-mail
+   * @param params 
+   */
+  async resendVerificationEmail(params: EmailDto): Promise<Response> {
+    const user = await this.findOneByEmail(params.email);
+    
+    if (user === null) {
+      throw new NotFoundException({
+        success: false,
+        error: "No user to verify"
+      });
+    }
+    
+    const confirmationHash = await this.confirmationHashService.findHashById(user.id);
+
+    const from = '"[Verify your account] Skylogbook" <skylogbookapp@gmail.com>';
+    const subject = 'Verify your account';
+    const html = `
+      <h3>Hi ${user.name},</h3>
+      <p>
+        please verify your account clicking on this link:
+      </p> 
+      <a href="${this.config.get('CLIENT_URL')}/verify/${confirmationHash.hash}">${this.config.get('CLIENT_URL')}/verify/${confirmationHash.hash}</a> <br>
+      <p>Best regards, <br> The Skylogbook Team</p>
+    `;
+
+    this.emailService.sendMail(from, user.email, subject, html);
+    
+    return {
+      success: true,
+      message: "Verification e-mail sent",
     }
   }
 
@@ -182,6 +222,7 @@ export class UserService {
 
     if (confirmationHash === null) {
       throw new NotFoundException({
+        success: false,
         error: "No user to verify"
       });
     }
@@ -190,13 +231,17 @@ export class UserService {
     try {
       await this.userModel.updateOne({ _id: userId}, { verified: true, roles: [RolesEnum.User], updatedOn });
     } catch (error) {
-      throw new UnauthorizedException();
+      throw new UnauthorizedException({
+        success: false,
+        error: "User not verified"
+      });
     }
     
     await this.confirmationHashService.deleteByHash(confirmationHash.hash);
 
     return {
-      response: "Account verified"
+      success: true,
+      message: "Account verified"
     };
   }
 }
