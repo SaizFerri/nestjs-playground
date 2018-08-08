@@ -20,6 +20,7 @@ import { includes } from 'lodash';
 import * as bcrypt from 'bcrypt';
 import * as EmailValidator from 'email-validator';
 import * as moment from 'moment';
+import { UserDto } from '../dtos/user.dto';
 
 @Injectable()
 export class UserService {
@@ -31,84 +32,84 @@ export class UserService {
     private readonly config: ConfigService
   ){ }
 
-  async findAll(): Promise<User[]> {
+  async findAll(): Promise<UserDto[]> {
     return await this.userModel.find().exec();
   }
 
-  async findOneById(id: String): Promise<User> {
-    return await this.userModel.findOne({ _id: id });
+  async findOneById(id: string): Promise<User> {
+    try {
+      return await this.userModel.findOne({ _id: id });
+    } catch (err) {
+      throw new NotFoundException({
+        success: false,
+        error: "User not found"
+      });
+    }
   }
 
-  async findOneByEmail(email: String): Promise<User> {
-    return await this.userModel.findOne({ email });
+  async findOneByEmail(email: string): Promise<User> {
+    try {
+      return await this.userModel.findOne({ email });
+    } catch (err) {
+      throw new NotFoundException({
+        success: false,
+        error: "User not found"
+      });
+    }
+  }
+
+  async updateOne(id: string, params: UserDto): Promise<User> {
+    const user = await this.findOneById(id);
+    
+    try {
+      await this.userModel.updateOne({ _id: user.id }, { name: params.name });
+      return await this.findOneByEmail(user.email);
+    } catch (err) {
+      throw new NotFoundException({
+        success: false,
+        error: "User not found"
+      });
+    }
   }
 
   /**
-   * Function which takes an id and a role as parameter
-   * and adds or deletes the user role.
+   * Function which takes an id and a roles array as parameter
+   * and updates the user roles.
    * @throws BadRequestException
    * @param params 
    */
-  async addRoles(params: ChangeRolesDto): Promise<RolesEnum[]> {
+  async updateRoles(params: ChangeRolesDto): Promise<RolesEnum[]> {
     const user = await this.findOneById(params.id);
     
     if (user === null) {
-      throw new UnauthorizedException();
+      throw new UnauthorizedException({
+        success: false,
+        error: "User not found"
+      });
     }
-
-    const userRoles = [...user.roles];
     
     // If role is not in RolesEnum throw bad request exception
     params.roles.forEach((role) => {
-      if (!(<any>Object).values(RolesEnum).includes(role) || includes(userRoles, role)) {
-        throw new BadRequestException();
+      if (!(<any>Object).values(RolesEnum).includes(role)) {
+        throw new BadRequestException({
+          success: false,
+          error: `${role} role not known`
+        });
       }
     });
-    
-    userRoles.push(...params.roles);
+
+    // Check to not remove the user role
+    if (params.roles.indexOf(RolesEnum.USER) == -1) {
+      throw new BadRequestException({
+        success: false,
+        error: "Can't remove user role"
+      });
+    }
     
     // If it doesn't have the role, add it
     try {
-      await this.userModel.update({ _id: params.id }, { roles: userRoles});
-      return userRoles;
-    } catch(exception) {
-      throw new NotFoundException();
-    }
-  }
-
-  /**
-   * Deletes a Role passed in the params.roles
-   * @throws BadRequestException
-   * @param params 
-   */
-  async removeRole(params: ChangeRolesDto): Promise<RolesEnum[]> {
-    const user = await this.findOneById(params.id);
-    const role = params.roles[0];
-    
-    if (user === null) {
-      throw new UnauthorizedException();
-    }
-
-    const userRoles = [...user.roles];
-
-    // If role is not in RolesEnum or the role is "user" throw bad request exception
-    if (!(<any>Object).values(RolesEnum).includes(role)
-       || params.roles.length > 1 
-       || role === RolesEnum.User 
-       || !includes(userRoles, role))
-    {
-      throw new BadRequestException();
-    }
-
-    const index = userRoles.indexOf(role, 0);
-
-    if (index > -1) {
-      userRoles.splice(index, 1);
-    }
-
-    try {
-      await this.userModel.update({ _id: params.id }, { roles: userRoles });
-      return userRoles;
+      await this.userModel.update({ _id: params.id }, { roles: params.roles});
+      return params.roles;
     } catch(exception) {
       throw new NotFoundException();
     }
@@ -236,7 +237,7 @@ export class UserService {
     const userId = confirmationHash.userId;
     
     try {
-      await this.userModel.updateOne({ _id: userId}, { verified: true, roles: [RolesEnum.User], updatedOn });
+      await this.userModel.updateOne({ _id: userId}, { verified: true, roles: [RolesEnum.USER], updatedOn });
     } catch (error) {
       throw new UnauthorizedException({
         success: false,

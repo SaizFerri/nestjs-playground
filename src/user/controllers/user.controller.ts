@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, UseGuards, Put, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, UseGuards, Put, Param, Delete, NotFoundException } from '@nestjs/common';
 import { UserService } from '../services/user.service';
 import { User } from '../interfaces/user.interface';
 import { AuthGuard } from '@nestjs/passport';
@@ -17,6 +17,7 @@ import { VerifyHashDto } from '../dtos/verify-hash.dto';
 import { EmailDto } from '../dtos/email.dto';
 
 import { RolesEnum } from '../enums/roles.enum';
+import { UserDto } from '../dtos/user.dto';
 
 @Controller('users')
 export class UserController {
@@ -28,9 +29,40 @@ export class UserController {
 
   @Get()
   @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Roles(RolesEnum.Admin)
-  async findAll():  Promise<User[]> {
-    return await this.userService.findAll();
+  @Roles(RolesEnum.ADMIN)
+  async findAll():  Promise<UserDto[]> {
+    const users =  await this.userService.findAll();
+    const newUsers = users.map((user) => {
+      return {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        roles: user.roles,
+        verified: user.verified
+      }
+    });
+    return newUsers;
+  }
+
+  @Get(':id')
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(RolesEnum.ADMIN)
+  async findOne(@Param('id') _id):  Promise<UserDto> {
+    const { id, name, email, roles, verified } = await this.userService.findOneById(_id);
+    return {
+      id,
+      name,
+      email,
+      roles,
+      verified
+    }
+  }
+
+  @Put(':id')
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(RolesEnum.ADMIN)
+  async updateOne(@Param('id') _id, @Body() params: UserDto):  Promise<User> {
+    return await this.userService.updateOne(_id, params);
   }
 
   @Post('/login')
@@ -55,16 +87,9 @@ export class UserController {
 
   @Put('roles')
   @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Roles(RolesEnum.User)
+  @Roles(RolesEnum.ADMIN)
   async addRoles(@Body() params: ChangeRolesDto) {
-    return await this.userService.addRoles(params);
-  }
-
-  @Delete('roles')
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Roles(RolesEnum.Admin)
-  async removeRole(@Body() params: ChangeRolesDto) {
-    return await this.userService.removeRole(params);
+    return await this.userService.updateRoles(params);
   }
 
   @Put('/verify')
