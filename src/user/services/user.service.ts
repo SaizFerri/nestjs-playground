@@ -38,6 +38,8 @@ export class UserService {
 
   async findOneById(id: string): Promise<User> {
     try {
+      console.log(id);
+      
       return await this.userModel.findOne({ _id: id });
     } catch (err) {
       throw new NotFoundException({
@@ -58,7 +60,7 @@ export class UserService {
     }
   }
 
-  async updateOne(id: string, params: UserDto): Promise<User> {
+  async updateOneUser(id: string, params: UserDto): Promise<User> {
     const user = await this.findOneById(id);
     
     try {

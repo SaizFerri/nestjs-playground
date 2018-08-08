@@ -1,10 +1,11 @@
-import { Controller, Get, Post, Body, UseGuards, Put, Param, Delete, NotFoundException } from '@nestjs/common';
-import { UserService } from '../services/user.service';
-import { User } from '../interfaces/user.interface';
+import { Controller, Get, Post, Body, UseGuards, Put, Param } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
+
+import { User } from '../interfaces/user.interface';
 import { Roles } from '../../auth/decorators/roles.decorator';
 import { RolesGuard } from '../../auth/guards/roles.guard';
 
+import { UserService } from '../services/user.service';
 import { UserLoginService } from '../services/user-login.service';
 import { UserResetPasswordService } from '../services/user-reset-password.service';
 
@@ -15,9 +16,9 @@ import { UserLoginDto } from '../dtos/user-login.dto';
 import { TokenDto } from '../dtos/token-dto';
 import { VerifyHashDto } from '../dtos/verify-hash.dto';
 import { EmailDto } from '../dtos/email.dto';
+import { UserDto } from '../dtos/user.dto';
 
 import { RolesEnum } from '../enums/roles.enum';
-import { UserDto } from '../dtos/user.dto';
 
 @Controller('users')
 export class UserController {
@@ -44,7 +45,7 @@ export class UserController {
     return newUsers;
   }
 
-  @Get(':id')
+  @Get('user/:id')
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles(RolesEnum.ADMIN)
   async findOne(@Param('id') _id):  Promise<UserDto> {
@@ -55,32 +56,32 @@ export class UserController {
       email,
       roles,
       verified
-    }
+    };
   }
 
-  @Put(':id')
+  @Put('user/:id')
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles(RolesEnum.ADMIN)
   async updateOne(@Param('id') _id, @Body() params: UserDto):  Promise<User> {
-    return await this.userService.updateOne(_id, params);
+    return await this.userService.updateOneUser(_id, params);
   }
 
-  @Post('/login')
+  @Post('login')
   async login(@Body() user: UserLoginDto): Promise<TokenDto> {
     return await this.userLoginService.login(user);
   }
 
-  @Post('/register')
+  @Post('register')
   async createUser(@Body() user: CreateUserDto) {
     return await this.userService.createUser(user);
   }
   
-  @Post('/resetPassword')
+  @Post('resetPassword')
   async createResetPasswordToken(@Body() params: EmailDto) {
     return await this.userResetPasswordService.createResetPasswordToken(params);
   }
 
-  @Put('/resetPassword')
+  @Put('resetPassword')
   async resetPassword(@Body() params: ResetPasswordDto) {
     return await this.userResetPasswordService.resetPassword(params);
   }
@@ -92,12 +93,12 @@ export class UserController {
     return await this.userService.updateRoles(params);
   }
 
-  @Put('/verify')
+  @Put('verify')
   async verifyAccount(@Body() params: VerifyHashDto): Promise<User> {
     return await this.userService.verifyAccount(params);
   }
 
-  @Post('/resendVerificationEmail')
+  @Post('resendVerificationEmail')
   async resendVerificationEmail(@Body() params: EmailDto) {
     return this.userService.resendVerificationEmail(params);
   }
