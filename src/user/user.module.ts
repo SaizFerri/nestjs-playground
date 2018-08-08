@@ -1,13 +1,17 @@
 import { Module, forwardRef } from '@nestjs/common';
-import { UserController } from './controllers/user.controller';
-import { UserService } from './services/user.service';
 import { MongooseModule } from '@nestjs/mongoose';
-import { UserSchema } from './schema/user.schema';
-import { AuthModule } from 'auth/auth.module';
+
+import { ConfigModule } from '../config/config.module';
+import { EmailModule } from '../email/email.module';
+import { AuthModule } from '../auth/auth.module';
+
+import { UserService } from './services/user.service';
 import { UserLoginService } from './services/user-login.service';
 import { UserResetPasswordService } from './services/user-reset-password.service';
-import { ConfigModule } from 'config/config.module';
-import { EmailModule } from 'email/email.module';
+
+import { UserSchema } from './schema/user.schema';
+
+import { UserController } from './controllers/user.controller';
 
 @Module({
   imports: [

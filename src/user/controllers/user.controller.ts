@@ -2,18 +2,21 @@ import { Controller, Get, Post, Body, UseGuards, Put, Param, Delete } from '@nes
 import { UserService } from '../services/user.service';
 import { User } from '../interfaces/user.interface';
 import { AuthGuard } from '@nestjs/passport';
-import { Roles } from 'auth/decorators/roles.decorator';
-import { RolesGuard } from 'auth/guards/roles.guard';
+import { Roles } from '../../auth/decorators/roles.decorator';
+import { RolesGuard } from '../../auth/guards/roles.guard';
+
 import { UserLoginService } from '../services/user-login.service';
-import { ChangeRolesDto } from '../dtos/change-roles.dto';
-import { RolesEnum } from '../enums/roles.enum';
 import { UserResetPasswordService } from '../services/user-reset-password.service';
+
+import { ChangeRolesDto } from '../dtos/change-roles.dto';
 import { ResetPasswordDto } from '../dtos/reset-password.dto';
 import { CreateUserDto } from '../dtos/create-user.dto';
 import { UserLoginDto } from '../dtos/user-login.dto';
 import { TokenDto } from '../dtos/token-dto';
 import { VerifyHashDto } from '../dtos/verify-hash.dto';
 import { EmailDto } from '../dtos/email.dto';
+
+import { RolesEnum } from '../enums/roles.enum';
 
 @Controller('users')
 export class UserController {

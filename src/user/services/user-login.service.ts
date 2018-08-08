@@ -1,15 +1,14 @@
 import { Injectable, Inject, forwardRef, UnauthorizedException } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 
-import { Model } from 'mongoose';
-
-import { AuthService } from "auth/services/auth.service";
+import { AuthService } from "../../auth/services/auth.service";
 
 import { User } from "../interfaces/user.interface";
 
 import { UserLoginDto } from '../dtos/user-login.dto';
 import { TokenDto } from '../dtos/token-dto';
 
+import { Model } from 'mongoose';
 import * as bcrypt from 'bcrypt';
 
 @Injectable()

@@ -1,9 +1,9 @@
 import { Injectable, NotFoundException, BadRequestException, UnauthorizedException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 
-import { ConfirmationHashService } from 'auth/services/confirmation-hash.service';
-import { ConfigService } from 'config/services/config.service';
-import { EmailService } from 'email/services/email.service';
+import { ConfirmationHashService } from '../../auth/services/confirmation-hash.service';
+import { ConfigService } from '../../config/services/config.service';
+import { EmailService } from '../../email/services/email.service';
 
 import { ChangeRolesDto } from '../dtos/change-roles.dto';
 import { CreateUserDto } from '../dtos/create-user.dto';

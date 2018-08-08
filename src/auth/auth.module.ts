@@ -1,8 +1,8 @@
 import { Module, forwardRef } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 
-import { ConfigModule } from 'config/config.module';
-import { UserModule } from 'user/user.module';
+import { ConfigModule } from '../config/config.module';
+import { UserModule } from '../user/user.module';
 
 import { AuthService } from './services/auth.service';
 import { ConfirmationHashService } from './services/confirmation-hash.service';

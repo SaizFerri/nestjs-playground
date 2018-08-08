@@ -1,40 +1,29 @@
 import { Injectable, UnauthorizedException } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 
-import { Model } from 'mongoose';
-
 import { UserService } from "./user.service";
-import { ConfigService } from "config/services/config.service";
+import { ConfigService } from "../../config/services/config.service";
+import { EmailService } from "../../email/services/email.service";
 
 import { User } from "../interfaces/user.interface";
 
 import { EmailDto } from "../dtos/email.dto";
 import { ResetPasswordDto } from "../dtos/reset-password.dto";
 
+import { Model } from 'mongoose';
 import * as jwt from 'jsonwebtoken';
 import * as bcrypt from 'bcrypt';
-import * as nodemailer from 'nodemailer';
 import * as moment from 'moment';
 
 @Injectable()
 export class UserResetPasswordService {
-  mailTransport: any;
 
   constructor(
     @InjectModel('User') private readonly userModel: Model<User>,
     private readonly userService: UserService,
-    private readonly config: ConfigService
-  ){
-    this.mailTransport = nodemailer.createTransport({
-      host: 'smtp.gmail.com',
-        port: 465,
-        secure: true,
-        auth: {
-          user: config.get('EMAIL_USER'),
-          pass: config.get('EMAIL_PASS')
-        }
-    });
-  }
+    private readonly config: ConfigService,
+    private readonly emailService: EmailService
+  ){ }
 
   /**
    * Function to create the resetPassword token
@@ -65,20 +54,19 @@ export class UserResetPasswordService {
       // Update the user in the database with the token
       await this.userModel.updateOne({ email: email }, { updatedOn, resetPasswordToken: token });
       
-      this.mailTransport.sendMail({
-        from: '"[Reset your Password] Skylogbook" <skylogbookapp@gmail.com>',
-        to: email,
-        subject: 'Reset your password',
-        text: '',
-        html: `
-          <h3>Hi ${user.name},</h3>
-          <p>
-            please click the link below to reset your password:
-          </p> 
-          <a href="${this.config.get('CLIENT_URL')}/resetPassword/${token}">${this.config.get('CLIENT_URL')}/resetPassword/${token}</a> <br>
-          <p>Best regards, <br> The Skylogbook Team</p>
-        `
-      });
+      const from =  '"[Reset your Password] Skylogbook" <skylogbookapp@gmail.com>';
+      const to =  email;
+      const subject =  'Reset your password';
+      const html = `
+        <h3>Hi ${user.name},</h3>
+        <p>
+          please click the link below to reset your password:
+        </p> 
+        <a href="${this.config.get('CLIENT_URL')}/resetPassword/${token}">${this.config.get('CLIENT_URL')}/resetPassword/${token}</a> <br>
+        <p>Best regards, <br> The Skylogbook Team</p>
+      `;
+
+      this.emailService.sendMail(from, to, subject, html);
 
     } catch (error) {
       throw new UnauthorizedException({

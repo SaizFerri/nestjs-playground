@@ -1,9 +1,12 @@
 import { Injectable, BadRequestException } from "@nestjs/common";
-import { Model, ObjectId } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
+
 import { ConfirmationHash } from '../interfaces/confirmation-hash.interface';
+
+import { ConfigService } from "../../config/services/config.service";
+
+import { Model, ObjectId } from 'mongoose';
 import * as crypto from 'crypto';
-import { ConfigService } from "config/services/config.service";
 
 @Injectable()
 export class ConfirmationHashService {
