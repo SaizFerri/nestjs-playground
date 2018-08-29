@@ -6,6 +6,7 @@ import { configService } from './config/services/config.service';
 import { AuthModule } from './auth/auth.module';
 import { EmailModule } from './email/email.module';
 import { AppController } from './app.controller';
+import { AirportsModule } from './airports/airports.module';
 
 @Module({
   imports: [
@@ -13,7 +14,8 @@ import { AppController } from './app.controller';
     MongooseModule.forRoot(configService.get('DATABASE_URI'), { useNewUrlParser: true }),
     ConfigModule,
     AuthModule,
-    EmailModule
+    EmailModule,
+    AirportsModule
   ],
   controllers: [AppController],
   providers: [],

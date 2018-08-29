@@ -9,6 +9,7 @@ import { ChangeRolesDto } from '../dtos/change-roles.dto';
 import { CreateUserDto } from '../dtos/create-user.dto';
 import { VerifyHashDto } from '../dtos/verify-hash.dto';
 import { EmailDto } from '../dtos/email.dto';
+import { UserDto } from '../dtos/user.dto';
 
 import { User } from '../interfaces/user.interface';
 
@@ -20,7 +21,6 @@ import { includes } from 'lodash';
 import * as bcrypt from 'bcrypt';
 import * as EmailValidator from 'email-validator';
 import * as moment from 'moment';
-import { UserDto } from '../dtos/user.dto';
 
 @Injectable()
 export class UserService {
