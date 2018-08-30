@@ -7,8 +7,8 @@ import { Airport } from "../interfaces/airport.interface";
 export class AirportController {
   constructor(private readonly airportService: AirportService){}
 
-  @Get('airports/:id')
-  async getAirports(@Param('id') id): Promise<Airport> {
-    return await this.airportService.filterAirports(id);
+  @Get('airports/:param')
+  async getAirports(@Param('param') param): Promise<Airport | any> {
+    return await this.airportService.filterAirports(param);
   }
 }
