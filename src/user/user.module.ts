@@ -9,7 +9,7 @@ import { UserService } from './services/user.service';
 import { UserLoginService } from './services/user-login.service';
 import { UserResetPasswordService } from './services/user-reset-password.service';
 
-import { UserSchema } from './schema/user.schema';
+import { UserSchema } from './schemas/user.schema';
 
 import { UserController } from './controllers/user.controller';
 

@@ -7,6 +7,7 @@ import { AuthModule } from './auth/auth.module';
 import { EmailModule } from './email/email.module';
 import { AppController } from './app.controller';
 import { AirportsModule } from './airports/airports.module';
+import { LogbookModule } from './logbook/logbook.module';
 
 @Module({
   imports: [
@@ -15,7 +16,8 @@ import { AirportsModule } from './airports/airports.module';
     ConfigModule,
     AuthModule,
     EmailModule,
-    AirportsModule
+    AirportsModule,
+    LogbookModule
   ],
   controllers: [AppController],
   providers: [],
