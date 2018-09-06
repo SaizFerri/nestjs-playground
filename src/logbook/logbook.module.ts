@@ -10,13 +10,15 @@ import { LogSchema } from './schemas/log.schema';
 import { ConfigModule } from '../config/config.module';
 import { UserModule } from '../user/user.module';
 import { AirportsModule } from '../airports/airports.module';
+import { AuthModule } from 'auth/auth.module';
 
 @Module({
   imports: [
     MongooseModule.forFeature([{ name: 'Log', schema: LogSchema }]),  
     ConfigModule,
     UserModule,
-    AirportsModule
+    AirportsModule,
+    AuthModule
   ],
   controllers: [LogbookController],
   providers: [LogbookService],

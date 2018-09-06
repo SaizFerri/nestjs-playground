@@ -60,9 +60,17 @@ export class UserService {
 
   async updateOneUser(id: string, params: UserDto): Promise<User> {
     const user = await this.findOneById(id);
+    const updatedOn = moment.utc(Date.now());
+
+    if (!EmailValidator.validate(params.email)) {
+      throw new BadRequestException({
+        success: false,
+        message: "Email not valid"
+      });
+    }
     
     try {
-      await this.userModel.updateOne({ _id: user.id }, { name: params.name });
+      await this.userModel.updateOne({ _id: user.id }, { name: params.name, email: params.email, updatedOn });
       return await this.findOneByEmail(user.email);
     } catch (err) {
       throw new NotFoundException({

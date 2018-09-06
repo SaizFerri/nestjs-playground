@@ -1,22 +1,37 @@
+import { DayTimeEnum } from "../enums/daytime.enum";
+import { FlightRoleEnum } from "../enums/flightrole.enum";
+import { AircraftTypeEnum } from "../enums/aircraft-type.enum";
+
 export interface Log {
   date: Date,
-  aircraftRegistration: string,
-  aircraftType: string,
+  aircraft: {
+    registration: string,
+    model: string,
+    type: AircraftTypeEnum
+  },
   pic: {
     id: string,
     name: string,
-    duty?: string
+    duty: FlightRoleEnum
   },
   pm?: {
     name?: string,
-    duty?: string
+    duty?: FlightRoleEnum
   },
-  from: string,
-  to: string,
-  startBlock: string,
-  endBlock: string,
-  totalTime: string,
-  aircraft: string,
-  dayTime: string,
+  from: {
+    id: string,
+    name: string
+  },
+  to: {
+    id: string,
+    name: string
+  },
+  time: {
+    start: string,
+    end: string,
+    nextDay: boolean,
+    total?: string,
+    dayTime: DayTimeEnum
+  },
   remarks?: string
 }

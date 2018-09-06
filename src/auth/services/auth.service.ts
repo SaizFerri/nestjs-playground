@@ -36,4 +36,11 @@ export class AuthService {
   async validateUser(payload: JwtPayload): Promise<User> {
     return await this.userService.findOneByEmail(payload.email);
   }
+
+  decodeToken(token: string): JwtPayload {
+    if (!token) {
+      return null;
+    }
+    return jwt.decode(token);
+  }
 }

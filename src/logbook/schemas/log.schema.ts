@@ -1,23 +1,40 @@
 import * as mongoose from 'mongoose';
+import { AircraftTypeEnum } from '../enums/aircraft-type.enum';
+import { FlightRoleEnum } from '../enums/flightrole.enum';
+import { DayTimeEnum } from '../enums/daytime.enum';
 
 export const LogSchema = new mongoose.Schema({
   date: { type: Date, required: true },
-  aircraftRegistration: { type: String, required: true },
-  aircraftType: { type: String, required: true },
+  aircraft: {
+    registration: { type: String, required: true },
+    model: { type: String, required: true },
+    type: { type: AircraftTypeEnum, required: true },
+  },
   pic: {
-    user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-    duty: { type: String }
+    id: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+    name: { type: String, ref: 'User', required: true },
+    duty: { type: FlightRoleEnum, required: true, default: null }
   },
   pm: {
-    name: { type: String },
-    duty: { type: String }
+    name: { type: String, default: null },
+    duty: { type: FlightRoleEnum, default: null }
   },
-  from: { type: mongoose.Schema.Types.ObjectId, ref: 'AirportSchema', required: true },
-  to: { type: mongoose.Schema.Types.ObjectId, ref: 'AirportSchema', required: true },
-  startBlock: { type: String, required: true },
-  endBlock: { type: String, required: true },
-  totalTime: { type: String },
-  aircraft: { type: String, required: true },
-  dayTime: { type: String, required: true },
-  remarks: { type: String }
+  from: {
+    id: { type: mongoose.Schema.Types.ObjectId, ref: 'AirportSchema', required: true },
+    name: { type: String }
+  },
+  to: {
+    id: { type: mongoose.Schema.Types.ObjectId, ref: 'AirportSchema', required: true },
+    name: { type: String }
+  },
+  time: {
+    start: { type: String, required: true },
+    end: { type: String, required: true },
+    nextDay: { type: Boolean, required: true, default: false },
+    total: { type: String },
+    dayTime: { type: DayTimeEnum, required: true }
+  },
+  remarks: { type: String, default: null },
+  createdOn: { type: Date, default: null },
+  updatedOn: { type: Date, default: null }
 })

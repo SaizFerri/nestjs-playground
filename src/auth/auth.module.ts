@@ -10,6 +10,7 @@ import { ConfirmationHashService } from './services/confirmation-hash.service';
 import { JwtStrategy } from './strategies/jwt.strategy';
 
 import { ConfirmationHashSchema } from './schema/confirmation-hash.schema';
+import { LogbookService } from 'logbook/services/logbook.service';
 
 @Module({
   imports: [

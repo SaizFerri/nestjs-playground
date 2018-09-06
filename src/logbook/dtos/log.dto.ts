@@ -1,18 +1,26 @@
 export class LogDto {
-  user: string;
   date: Date;
-  aircraftRegistration: string;
-  aircraftType: string;
+  aircraft: {
+    registration: string,
+    model: string,
+    type: string
+  };
+  pic: {
+    email?: string,
+    duty?: string
+  };
   pm?: {
     name?: string,
     duty?: string
   };
   from: string;
   to: string;
-  startBlock: string;
-  endBlock: string;
-  totalTime: string;
-  aircraft: string;
-  dayTime: string;
+  time: {
+    start: string,
+    end: string,
+    nextDay: boolean,
+    total?: string,
+    dayTime: string
+  };
   remarks?: string;
 } 

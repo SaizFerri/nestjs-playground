@@ -11,6 +11,16 @@ export class AirportService {
     @InjectModel('Airport') private readonly airportModel: Model<Airport>,
   ) {}
 
+  async findOne(code: string): Promise<Airport | any> {
+    if (code.length > 4 ) {
+      return {
+        error: true,
+        message: "Icao code must be between 1 and 4 characters"
+      };
+    }
+    return await this.airportModel.findOne({ icao: code });
+  }
+
   async filterAirports(code: string): Promise<Airport | any> {
     if (code.length > 4 ) {
       return {
