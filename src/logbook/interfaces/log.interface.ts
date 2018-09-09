@@ -33,5 +33,7 @@ export interface Log {
     total?: string,
     dayTime: DayTimeEnum
   },
+  createdOn?: Date,
+  updatedOn?: Date,
   remarks?: string
 }
