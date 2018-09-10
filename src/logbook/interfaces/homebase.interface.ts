@@ -1,14 +1,14 @@
 import { AircraftTypeEnum } from "../enums/aircraft-type.enum";
 
 export interface HomeBase {
-  userId?: string | Number,
+  userId?: Number,
   aircraft: {
     registration: string,
     model: string,
     type: AircraftTypeEnum
   },
   from: {
-    id?: string,
+    id?: Number,
     name: string
   },
   createdOn?: Date,

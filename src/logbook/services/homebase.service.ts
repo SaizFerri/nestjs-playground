@@ -19,9 +19,30 @@ export class HomeBaseService {
     private readonly airportService: AirportService
   ) {}
 
+  async getHomeBases(id: Number): Promise<HomeBase[] | {}> {
+    return await this.homeBaseModel.find({ userId: id });
+  }
+
+  async getHomeBase(id: Number, homeBaseId: Number): Promise<HomeBase | {}> {
+    try {
+      return await this.homeBaseModel.findOne({ _id: homeBaseId, userId: id });
+    } catch (e) {
+      return {
+        error: e
+      }
+    }
+  }
+
   async createHomeBase(params: HomeBase): Promise<HomeBase | {}> {
     const createdOn = moment.utc(Date.now());
     const from = await this.airportService.findOne(params.from.name);
+
+    if (from.error) {
+      throw new BadRequestException({
+        success: false,
+        error: `${params.from.name} isn't a known airport.`
+      })
+    }
 
     let model = new this.homeBaseModel({
       userId: params.userId,
