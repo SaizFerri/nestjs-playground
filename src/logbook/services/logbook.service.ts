@@ -61,7 +61,10 @@ export class LogbookService {
   // Get all logged flights
   async getLogs(params: any): Promise<Log[] | {}> {
     const user = await this.userService.findOneByEmail(params.email);
+    const filterQuery = params.query;
+    let query: {} = {};
 
+    
     if (!user) {
       throw new NotFoundException({
         success: false,
@@ -69,15 +72,50 @@ export class LogbookService {
       })
     }
 
-    return await this.logModel.find({ "pic.id": user.id });
+    query["pic.id"] = user.id;
+    
+    if (filterQuery.fromDate && filterQuery.toDate) {
+      query["date"] = { "$gte": new Date(filterQuery.fromDate), "$lte": new Date(filterQuery.toDate) };
+    }
+    
+    if (filterQuery.fromDate && !filterQuery.toDate) {
+      query["date"] = { "$gte": new Date(filterQuery.fromDate) };
+    }
+    
+    if (!filterQuery.fromDate && filterQuery.toDate) {
+      query["date"] = { "$lte": new Date(filterQuery.toDate) };
+    }
+
+    if (filterQuery.from) {
+      query["from.name"] = filterQuery.from;
+    }
+
+    if (filterQuery.to) {
+      query["to.name"] = filterQuery.to;
+    }
+
+    if (filterQuery.aircraftRegistration) {
+      query["aircraft.registration"] = filterQuery.aircraftRegistration;
+    }
+
+    if (filterQuery.aircraftModel) {
+      query["aircraft.model"] = filterQuery.aircraftModel;
+    }
+
+    if (filterQuery.aircraftType) {
+      query["aircraft.type"] = filterQuery.aircraftType;
+    }
+
+    if (filterQuery.dayTime) {
+      query["time.dayTime"] = filterQuery.daytime;
+    }
+    
+    return await this.logModel.find(query);
   }
 
   async getLog(params: any): Promise<Log | {}> {
     const user = await this.userService.findOneByEmail(params.email);
     const log = await this.logModel.findOne({ _id: params.logId });
-
-    console.log(user);
-    console.log(log);
 
     if (!log || !user) {
       throw new NotFoundException({

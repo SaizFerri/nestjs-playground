@@ -22,6 +22,7 @@
     "@nestjs/core": "^5.3.7",
     "@nestjs/mongoose": "^5.2.2",
     "@nestjs/passport": "^1.1.0",
+    "@nestjs/swagger": "^2.5.1",
     "@types/dotenv": "^4.0.3",
     "@types/nodemailer": "^4.6.4",
     "bcrypt": "^3.0.0",

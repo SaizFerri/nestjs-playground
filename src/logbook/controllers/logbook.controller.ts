@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, UseGuards, Put, Param, Header, Req } from '@nestjs/common';
+import { Controller, Get, Post, Body, UseGuards, Put, Param, Header, Req, Query } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 
 import { Roles } from '../../auth/decorators/roles.decorator';
@@ -6,6 +6,7 @@ import { LogDto } from '../dtos/log.dto';
 import { Log } from '../interfaces/log.interface';
 import { LogbookService } from '../services/logbook.service';
 import { AuthService } from '../../auth/services/auth.service';
+import { ApiModelProperty, ApiImplicitQuery } from '@nestjs/swagger';
 
 @Controller('logbook')
 export class LogbookController {
@@ -17,11 +18,13 @@ export class LogbookController {
   // Get all the logbook from a user
   @Get()
   @UseGuards(AuthGuard('jwt'))
-  async getLogs(@Req() request): Promise<Log[] | any> {
+  @ApiImplicitQuery({ name: 'fromDate'})
+  @ApiImplicitQuery({ name: 'toDate'})
+  async getLogs(@Req() request, @Query() query): Promise<Log[] | any> {
     const token = request.headers.authorization.split(' ')[1];
     const { email } = this.authService.decodeToken(token);
 
-    return await this.logbookService.getLogs({ email });
+    return await this.logbookService.getLogs({ email, query });
   }
 
   // Get log by id
