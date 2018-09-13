@@ -2,7 +2,7 @@ import { Controller, Get, Post, Body, UseGuards, Put, Param, Header, Req, BadReq
 import { AuthGuard } from '@nestjs/passport';
 
 import { Roles } from '../../auth/decorators/roles.decorator';
-import { AuthService } from 'auth/services/auth.service';
+import { AuthService } from '../../auth/services/auth.service';
 import { HomeBase } from '../interfaces/homebase.interface';
 import { HomeBaseService } from '../services/homebase.service';
 

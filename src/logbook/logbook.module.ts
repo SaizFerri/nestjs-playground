@@ -10,7 +10,7 @@ import { LogSchema } from './schemas/log.schema';
 import { ConfigModule } from '../config/config.module';
 import { UserModule } from '../user/user.module';
 import { AirportsModule } from '../airports/airports.module';
-import { AuthModule } from 'auth/auth.module';
+import { AuthModule } from '../auth/auth.module';
 import { HomeBaseController } from './controllers/homebase.controller';
 import { HomeBaseService } from './services/homebase.service';
 import { HomeBaseSchema } from './schemas/homebase.schema';

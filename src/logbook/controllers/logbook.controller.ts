@@ -5,7 +5,7 @@ import { Roles } from '../../auth/decorators/roles.decorator';
 import { LogDto } from '../dtos/log.dto';
 import { Log } from '../interfaces/log.interface';
 import { LogbookService } from '../services/logbook.service';
-import { AuthService } from 'auth/services/auth.service';
+import { AuthService } from '../../auth/services/auth.service';
 
 @Controller('logbook')
 export class LogbookController {
